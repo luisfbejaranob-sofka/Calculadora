@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static co.com.sofka.calculadora.function.Calculadora.*;
 
@@ -29,20 +30,19 @@ public class CalculadoraController
 	}
 
 	@GetMapping("/tabla-multiplicar")
-	public Mono<String> tablaMultiplicar (Integer x)
+	public Mono<String> tablaMultiplicar (Integer factor)
 	{
-		return Mono.just(x).flatMap(tablaMultiplicar);
+		return Mono.just(factor).flatMap(tablaMultiplicar);
 	}
 
 	@GetMapping("/amortizacion")
-	public Mono<List<Credito>> TableAmortizacion (Integer cuotas, Integer credito)
+	public Mono<List<Credito>> tableAmortizacion (Integer cuotas, Integer credito)
 	{
 		return Mono.just(Arrays.asList(cuotas, credito)).flatMap(amortizacion);
 	}
 
 	@GetMapping(value = "/deduccion")
-	public Mono<List<Salario>> DeduccionSalario (Double salario) {
-		return Mono.just(salario).flatMap(deduccionSalario);
+	public Salario deducirSalario (Double salario) {
+		return deduccionSalario.apply(salario);
 	}
-
 }

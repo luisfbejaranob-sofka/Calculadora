@@ -6,6 +6,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -18,6 +19,7 @@ public class Calculadora
 				reduce(0, (a, b) -> a + b)
 		);
 
+
 	public static final Function<List<Integer>,Mono<Integer> > restar =  lista ->
 		Mono.just(
 			lista.stream().
@@ -25,14 +27,12 @@ public class Calculadora
 		)
 		.flatMap(x -> Mono.just(x * (-1)));
 
-	public static final Function<Integer, Mono<String>> tablaMultiplicar = x ->
+	public static final Function<Integer, Mono<String>> tablaMultiplicar = factor ->
 	{
-		List<String> tabla = new ArrayList<>();
-		for (int i = 1; i <= 10; i++)
-		{
-			int result = x * i;
-			tabla.add(x + " x " + i + " = " + result);
-		}
+		StringBuilder tabla = new StringBuilder();
+		IntStream.rangeClosed(0 , 10).forEach(
+				digito -> tabla.append(factor + " x " + digito + " = " + factor * digito + "<br>")
+		);
 		return Mono.just(tabla.toString());
 	};
 
@@ -57,29 +57,45 @@ public class Calculadora
 		return Mono.just(tablaPrestamo);
 	};
 
-	public static final Function<Double, Mono<List<Salario>> > deduccionSalario = r -> {
-		final Double APORTE_COMPENSACION = r*0.04;
-		final Double APORTE_RIESGOS = r*0.005;
-		final Double APORTE_PENSION_EMPLEADO = r*0.04;
-		final Double APORTE_PENSION_EMPLEADOR = r*0.085;
-		final Double APORTE_SALUD_EMPLEADO = r*0.04;
-		final Double APORTE_SALUD_EMPLEADOR = r*0.012;
-		final Double APORTE_FSP = r*0.01;
-		final Double TOTAL_SALARIO = (r+(APORTE_PENSION_EMPLEADOR+APORTE_SALUD_EMPLEADOR))-(APORTE_COMPENSACION+APORTE_RIESGOS+APORTE_PENSION_EMPLEADO+APORTE_SALUD_EMPLEADO+APORTE_FSP);
+	final static Double APORTE_SALUD_EMPLEADO = 0.04;
+	final static Double APORTE_SALUD_EMPLEADOR = 0.12;
+	final static Double APORTE_PENSION_EMPLEADO = 0.04;
+	final static Double APORTE_PENSION_EMPLEADOR = 0.085;
+	final static Double APORTE_CAJA_COMPENSACION = 0.04;
+	final static Double APORTE_RIESGOS_LABORALES = 0.005;
+	final static Double APORTE_FSP = 0.01;
+	final static Double SALARIO_MINIMO = 828116.0;
 
-		List<Salario> Deducciones = new ArrayList<>();
-		Stream.of(Deducciones.add(Salario.builder()
-			.salarioBase(r)
-			.aporteSaludEmpleado(APORTE_SALUD_EMPLEADO)
-			.aporteSaludEmpleador(APORTE_SALUD_EMPLEADOR)
-			.aportePensionEmpleado(APORTE_PENSION_EMPLEADO)
-			.aportePensionEmpleador(APORTE_PENSION_EMPLEADOR)
-			.aporteCajaDeCompensacion(APORTE_COMPENSACION)
-			.aporteRiesgosLaborales(APORTE_RIESGOS)
-			.pagoNetoEmpleado(TOTAL_SALARIO)
-			.aporteFSP(APORTE_FSP)
-			.costoEmpleador(APORTE_SALUD_EMPLEADOR + APORTE_PENSION_EMPLEADOR + APORTE_RIESGOS)
-			.build()));
-		return  Mono.just(Deducciones);
+	public static BiFunction<Double , Double , Double> deducir()
+	{
+		return (a , b) -> a * b;
+	}
+
+
+	public static Function<Salario , Salario> deducirTodo()
+	{
+		return r -> r.toBuilder()
+			.aporteSaludEmpleado(deducir().apply(r.getSalarioBase() , APORTE_SALUD_EMPLEADO))
+			.aporteSaludEmpleador(deducir().apply(r.getSalarioBase() , APORTE_SALUD_EMPLEADOR))
+			.aportePensionEmpleado(deducir().apply(r.getSalarioBase() , APORTE_PENSION_EMPLEADO))
+			.aportePensionEmpleador(deducir().apply(r.getSalarioBase() , APORTE_PENSION_EMPLEADOR))
+			.aporteCajaDeCompensacion(deducir().apply(r.getSalarioBase() , APORTE_CAJA_COMPENSACION))
+			.aporteRiesgosLaborales(deducir().apply(r.getSalarioBase() , APORTE_RIESGOS_LABORALES))
+			.aporteFSP(r.getSalarioBase() > (SALARIO_MINIMO * 4) ? deducir().apply(r.getSalarioBase() , APORTE_FSP) : 0.0)
+			.build();
+	}
+
+	public static Function<Salario , Salario> sumarDeducciones()
+	{
+		return r -> r.toBuilder()
+				.pagoNetoEmpleado(r.getSalarioBase() + (r.getAporteSaludEmpleador() + r.getAportePensionEmpleador()) - (r.getAporteSaludEmpleado() + r.getAportePensionEmpleado() + r.getAporteCajaDeCompensacion()) + r.getAporteFSP())
+				.costoEmpleador(r.getAporteSaludEmpleado() + r.getAportePensionEmpleado() + r.getAporteCajaDeCompensacion())
+				.build();
+	}
+
+	public static final Function<Double, Salario> deduccionSalario = salario -> {
+		return Stream.of(Salario.builder()
+			.salarioBase(salario)
+			.build()).map(deducirTodo()).map(sumarDeducciones()).reduce(Salario.builder().build() , (r1 , r2) -> r2);
 	};
 }
