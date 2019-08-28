@@ -1,75 +1,39 @@
 package co.com.sofka.calculadora.controller;
 
-import co.com.sofka.calculadora.function.Calculadora;
+import co.com.sofka.calculadora.model.Credito;
 import co.com.sofka.calculadora.model.Salario;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CalculadoraControllerTest
 {
-	/*@Test
-	void showSumarDosNumeros()
-	{
-		Integer a = 27;
-		Integer b = 86;
-		Mono<Integer> expected = Mono.just(113);
+	private CalculadoraController controller;
 
-		CalculadoraController controller = new CalculadoraController();
-
-		assertEquals(expected , controller.sumar(a , b));
-	}*/
-
-	/*@Test
-	void showCalcularAporteSaludEmpleado()
-	{
-		double salarioBase = 1000000;
-		final Salario expected = Salario.builder()
-			.salarioBase(salarioBase)
-			.aporteSaludEmpleado(new Double(40000))
-			.build();
-
-		CalculadoraController controller = new CalculadoraController();
-
-		assertEquals(expected.getAporteSaludEmpleado() , controller.Salario(salarioBase).getAporteSaludEmpleado());
-	}*/
-
-	@Test
-	void showDeducirTodo()
-	{
-		double salarioBase = 1000000;
-		final Salario expected = Salario.builder()
-				.salarioBase(salarioBase)
-				.aporteSaludEmpleado(40000.0)
-				.aporteSaludEmpleador(120000.0)
-				.aportePensionEmpleado(40000.0)
-				.aportePensionEmpleador(85000.0)
-				.aporteRiesgosLaborales(5000.0)
-				.aporteCajaDeCompensacion(40000.0)
-				.aporteFSP(0.0)
-				.build();
-
-		CalculadoraController controller = new CalculadoraController();
-
-		assertEquals(expected.getAporteSaludEmpleado() , controller.deducirSalario(salarioBase).getAporteSaludEmpleado());
-		assertEquals(expected.getAporteSaludEmpleador() , controller.deducirSalario(salarioBase).getAporteSaludEmpleador());
-		assertEquals(expected.getAportePensionEmpleado() , controller.deducirSalario(salarioBase).getAportePensionEmpleado());
-		assertEquals(expected.getAportePensionEmpleador() , controller.deducirSalario(salarioBase).getAportePensionEmpleador());
-		assertEquals(expected.getAporteRiesgosLaborales() , controller.deducirSalario(salarioBase).getAporteRiesgosLaborales());
-		assertEquals(expected.getAporteCajaDeCompensacion() , controller.deducirSalario(salarioBase).getAporteCajaDeCompensacion());
-		assertEquals(expected.getAporteFSP() , controller.deducirSalario(salarioBase).getAporteFSP());
+	@BeforeEach
+	void setUp() {
+		controller = new CalculadoraController();
 	}
 
-	/*@Test
+	@Test
+	void showAmortizacionCredito()
+	{
+		double valor = 1000000;
+		int cuotas = 2;
+		Credito p1 = new Credito(1 , 10000.0 , 500000.0 , 510000.0 , 500000.0);
+		Credito p2 = new Credito(2 , 10000.0 , 500000.0 , 510000.0 , 0.0);
+		List<Credito> expected = new ArrayList<>();
+		expected.add(p1);
+		expected.add(p2);
+
+		assertEquals(expected , controller.amortizacionCredito(valor , cuotas));
+	}
+
+	@Test
 	void showDeducirSalario()
 	{
 		double salarioBase = 1000000;
@@ -86,8 +50,6 @@ class CalculadoraControllerTest
 				.costoEmpleador(120000.0)
 				.build();
 
-		CalculadoraController controller = new CalculadoraController();
-
 		assertEquals(expected , controller.deducirSalario(salarioBase));
-	}*/
+	}
 }

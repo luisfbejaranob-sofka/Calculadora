@@ -36,9 +36,9 @@ public class CalculadoraController
 	}
 
 	@GetMapping("/amortizacion")
-	public Mono<List<Credito>> tableAmortizacion (Integer cuotas, Integer credito)
+	public List<Credito> amortizacionCredito (Double valor, Integer cuotas)
 	{
-		return Mono.just(Arrays.asList(cuotas, credito)).flatMap(amortizacion);
+		return amortizacionCredito.apply(valor , cuotas);
 	}
 
 	@GetMapping(value = "/deduccion")
